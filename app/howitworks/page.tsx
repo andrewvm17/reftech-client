@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { Navbar } from "@/components/Navbar"
 
 export default function HowItWorksPage() {
@@ -33,7 +34,13 @@ export default function HowItWorksPage() {
             just like the systems used in top leagues worldwide.
           </p>
           <div className="mt-6">
-            <img src="/images/vanishing_point.png" alt="Vanishing Point Example" className="rounded-lg shadow-lg" />
+            <Image
+              src="/images/vanishing_point.png"
+              alt="Vanishing Point Example"
+              width={640}
+              height={360}
+              className="rounded-lg shadow-lg"
+            />
             <p className=" text-sm text-gray-500 mt-2">Example of how we determine the correct offside perspective.</p>
           </div>
         </section>
@@ -47,7 +54,13 @@ export default function HowItWorksPage() {
               Simply upload a screenshot from a football broadcast or amateur match. Our system will process the image in 
               real-time to identify the pitch, players, and relevant lines.
             </p>
-            <img src="/images/upload_example.png" alt="Upload Example" className="rounded-lg shadow-lg mt-4" />
+            <Image
+              src="/images/upload_example.png"
+              alt="Upload Example"
+              width={640}
+              height={360}
+              className="rounded-lg shadow-lg mt-4"
+            />
           </div>
 
           <div className="mt-6">
@@ -56,7 +69,13 @@ export default function HowItWorksPage() {
               Using edge detection and advanced machine learning models, our system detects <strong>the key pitch markings</strong>, 
               including the penalty box and centerline, to calculate the perspective of the camera.
             </p>
-            <img src="/images/line_detection.png" alt="Line Detection Example" className="rounded-lg shadow-lg mt-4" />
+            <Image
+              src="/images/line_detection.png"
+              alt="Line Detection Example"
+              width={640}
+              height={360}
+              className="rounded-lg shadow-lg mt-4"
+            />
           </div>
 
           <div className="mt-6">
@@ -65,7 +84,13 @@ export default function HowItWorksPage() {
               Just like professional VAR systems, we determine the <strong>vanishing point</strong>—the key to drawing perfectly 
               aligned virtual offside lines, even from off-center broadcast angles.
             </p>
-            <img src="/images/vanishing_point.png" alt="Vanishing Point Calculation" className="rounded-lg shadow-lg mt-4" />
+            <Image
+              src="/images/vanishing_point.png"
+              alt="Vanishing Point Calculation"
+              width={640}
+              height={360}
+              className="rounded-lg shadow-lg mt-4"
+            />
           </div>
 
           <div className="mt-6">
@@ -74,7 +99,13 @@ export default function HowItWorksPage() {
               The system <strong>automatically generates a virtual offside line</strong>, marking players in offside (red) or 
               onside (green). You can even manually adjust the decision, just like real VAR referees.
             </p>
-            <img src="/images/offside_result.png" alt="Offside Decision" className="rounded-lg shadow-lg mt-4" />
+            <Image
+              src="/images/offside_result.png"
+              alt="Offside Decision"
+              width={640}
+              height={360}
+              className="rounded-lg shadow-lg mt-4"
+            />
           </div>
         </section>
 
@@ -92,7 +123,7 @@ export default function HowItWorksPage() {
         <section className="mb-10">
           <h2 className="text-2xl font-semibold mb-4">Get Started Today</h2>
           <p className="text-lg">
-            Whether you're a passionate football fan, a content creator, or part of an amateur league, our system gives you the power of VAR 
+            Whether you&rsquo;re a passionate football fan, a content creator, or part of an amateur league, our system gives you the power of VAR 
             <strong> at a fraction of the cost</strong>. Sign up now and start analyzing offside calls like a pro.
           </p>
           <div className="mt-6">

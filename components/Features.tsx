@@ -2,7 +2,7 @@
 import { motion } from "framer-motion"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Zap, Timer, Share2, Sparkles, Award, Download } from "lucide-react"
+import { Zap } from "lucide-react"
 
 const features = [
   {

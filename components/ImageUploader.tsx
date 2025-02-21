@@ -62,7 +62,7 @@ export function ImageUploader() {
   const [offsideLine, setOffsideLine] = useState<Line | null>(null)
   const [redLine, setRedLine] = useState<Line | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  // const [error, setError] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [selectedMode, setSelectedMode] = useState<"manual" | "semi-automated" | null>(null)
@@ -92,7 +92,7 @@ export function ImageUploader() {
       reader.onload = (e) => {
         if (e.target?.result) {
           setImage(e.target.result as string)
-          setError(null)
+          // setError(null)
         }
       }
       reader.readAsDataURL(file)
@@ -110,7 +110,7 @@ export function ImageUploader() {
     
     setIsLoading(true)
     setLoadStep(0)
-    setError(null)
+    // setError(null)
 
     // Force a fixed animation period, e.g. 6s
     setTimeout(() => {
@@ -145,7 +145,7 @@ export function ImageUploader() {
         throw new Error("Unexpected response format")
       }
     } catch (error) {
-      setError("Failed to analyze the image. Please try again.")
+      // setError("Failed to analyze the image. Please try again.")
       toast({
         title: "Error",
         description: "Failed to analyze the image. Please try again.",
@@ -163,7 +163,7 @@ export function ImageUploader() {
     setVanishingPoint(null)
     setOffsideLine(null)
     setRedLine(null)
-    setError(null)
+    // setError(null)
     setCurrentStep(0)
     setSelectedMode(null)
     setIsLoading(false)
@@ -579,30 +579,30 @@ export function ImageUploader() {
   }
 
   // NEW: A function to figure out if it's offside or onside:
-  const handleFinalDecision = () => {
-    if (!offsideLine || !redLine || !directionOfPlay) {
-      return
-    }
+  // const handleFinalDecision = () => {
+  //   if (!offsideLine || !redLine || !directionOfPlay) {
+  //     return
+  //   }
 
-    // For simplicity, compare minimal x for each line
-    // (or flip logic for directionOfPlay === 'right'):
-    const defenderX = Math.min(offsideLine.x1, offsideLine.x2)
-    const attackerX = Math.min(redLine.x1, redLine.x2)
+  //   // For simplicity, compare minimal x for each line
+  //   // (or flip logic for directionOfPlay === 'right'):
+  //   const defenderX = Math.min(offsideLine.x1, offsideLine.x2)
+  //   const attackerX = Math.min(redLine.x1, redLine.x2)
 
-    let isOffside = false
-    if (directionOfPlay === "left") {
-      // If attacker is further left (smaller x) than defender => offside
-      isOffside = attackerX < defenderX
-    } else {
-      // If attacker is further right (bigger x) than defender => offside
-      const defenderRight = Math.max(offsideLine.x1, offsideLine.x2)
-      const attackerRight = Math.max(redLine.x1, redLine.x2)
-      isOffside = attackerRight > defenderRight
-    }
+  //   let isOffside = false
+  //   if (directionOfPlay === "left") {
+  //     // If attacker is further left (smaller x) than defender => offside
+  //     isOffside = attackerX < defenderX
+  //   } else {
+  //     // If attacker is further right (bigger x) than defender => offside
+  //     const defenderRight = Math.max(offsideLine.x1, offsideLine.x2)
+  //     const attackerRight = Math.max(redLine.x1, redLine.x2)
+  //     isOffside = attackerRight > defenderRight
+  //   }
 
-    // Keep the logic that sets userDecision so the decision card appears
-    setUserDecision(isOffside ? "offside" : "onside")
-  }
+  //   // Keep the logic that sets userDecision so the decision card appears
+  //   setUserDecision(isOffside ? "offside" : "onside")
+  // }
 
   // Finally, we style the "Final Decision" button specially if we're at step 5 in semi-auto:
   const isFinalDecisionStep =

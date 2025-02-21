@@ -3,16 +3,12 @@
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+// import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar"
 import { ArrowRight, Zap } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
-const users = [
-  { name: "Alex", image: "/placeholder.svg?height=32&width=32" },
-  { name: "Ben", image: "/placeholder.svg?height=32&width=32" },
-  { name: "Charlie", image: "/placeholder.svg?height=32&width=32" },
-  { name: "David", image: "/placeholder.svg?height=32&width=32" },
-]
+// const users = ["Placeholder"] // example variable
 
 export function Hero() {
   return (
@@ -34,7 +30,7 @@ export function Hero() {
               <span className="block text-primary">VAR Operator</span>
             </h2>
             <p className="text-xl text-muted-foreground">
-              Whether you're a passionate fan or a professional referee, make and share accurate offside decisions with reftech.
+              Whether you&rsquo;re a passionate fan or a professional referee, make and share accurate offside decisions with reftech.
             </p>
           </div>
           <div className="flex flex-col gap-4 sm:flex-row">
@@ -65,13 +61,14 @@ export function Hero() {
           className="relative mx-auto w-full max-w-8xl shadow-2xl lg:ml-auto"
         >
           <div className="relative h-full w-full rounded-lg bg-background">
-            <img
+            <Image
               alt="soccer offsides"
               src="/images/marketing_static_demo.png"
               className="h-full w-full object-contain"
+              width={640}
+              height={360}
             />
             <div className="absolute inset-0" />
-            
           </div>
         </motion.div>
       </div>
