@@ -45,7 +45,7 @@ export function Hero() {
             </Button>
           </div>
           <div className="mt-4 inline-flex items-center space-x-2 border border-muted-foreground px-2 py-1 rounded-md">
-            <img src="/images/ussf_logo.png" alt="USSF Logo" className="h-6 w-auto" />
+            <Image src="/images/ussf_logo.png" alt="USSF Logo" className="h-6 w-auto" width={24} height={24} />
             <span className="text-sm text-muted-foreground">Created by a USSF certified referee</span>
           </div>
           <p className="text-[10px] text-muted-foreground leading-tight max-w-xs">

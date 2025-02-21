@@ -62,7 +62,7 @@ export function ImageUploader() {
   const [offsideLine, setOffsideLine] = useState<Line | null>(null)
   const [redLine, setRedLine] = useState<Line | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  // const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [selectedMode, setSelectedMode] = useState<"manual" | "semi-automated" | null>(null)
@@ -145,7 +145,7 @@ export function ImageUploader() {
         throw new Error("Unexpected response format")
       }
     } catch (error) {
-      // setError("Failed to analyze the image. Please try again.")
+      console.error("Error analyzing image:", error)
       toast({
         title: "Error",
         description: "Failed to analyze the image. Please try again.",
