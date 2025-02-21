@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -18,9 +22,53 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
-    }
+      "@/*": [
+        "./*"
+      ],
+      "@components/*": [
+        "./components/*"
+      ],
+      "@lib/*": [
+        "./lib/*"
+      ],
+      "@hooks/*": [
+        "./hooks/*"
+      ],
+      "@types/*": [
+        "./types/*"
+      ],
+      "@utils/*": [
+        "./utils/*"
+      ],
+      "@styles/*": [
+        "./styles/*"
+      ],
+      "@assets/*": [
+        "./assets/*"
+      ],
+      "@contexts/*": [
+        "./contexts/*"
+      ],
+      "@pages/*": [
+        "./pages/*"
+      ],
+      "@public/*": [
+        "./public/*"
+      ],
+      "@auth0/*": [
+        "./auth0/*"
+      ]
+    },
+    "target": "ES2017"
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "app/api/auth/[auth0]/route.js"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
