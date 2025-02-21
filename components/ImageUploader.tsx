@@ -8,12 +8,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { StepCard } from "./StepCard"
 import { ModeButton } from "./ModeButton"
-import { Play, AlertCircle, Upload, Plus, Settings, Sparkles, Mic2, ArrowLeft, ArrowRight } from "lucide-react"
+import { AlertCircle, Upload, Plus, Settings, Sparkles, ArrowLeft, ArrowRight } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { Progress } from "@/components/ui/progress"
+
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
-import AnimatedLines from "@/components/AnimatedLines"
+
 import { SemiAutoVARDecisionCard } from "./SemiAutoVARDecisionCard"
 import VARBorder from "@/components/VARBorder"
 
@@ -62,7 +62,6 @@ export function ImageUploader() {
   const [offsideLine, setOffsideLine] = useState<Line | null>(null)
   const [redLine, setRedLine] = useState<Line | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
@@ -203,7 +202,7 @@ export function ImageUploader() {
           setManualLines([])
 
           // Draw a new line from the vanishing point to canvas center
-          const canvas = canvasRef.current
+          
           setOffsideLine({
             x1: response.data.x_van,
             y1: response.data.y_van,
