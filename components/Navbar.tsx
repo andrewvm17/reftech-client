@@ -1,13 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
+
 import { Logo } from "./Logo"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ChevronDown, Menu, X } from "lucide-react"
 import { useState } from "react"
 import LoginLogoutButton from "./LoginLogoutButton"
-import UserGreetText from "./UserGreetText"
+
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)

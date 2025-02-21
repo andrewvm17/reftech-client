@@ -2,10 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react"
 
-type Point = {
-  x: number
-  y: number
-}
+
 
 type Line = {
   x1: number
@@ -157,10 +154,7 @@ export function ManualCanvas({
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
   }
 
-  // Example function to finalize or "lock" lines
-  const lockLines = useCallback(() => {
-    if (onLinesLocked) onLinesLocked(lines)
-  }, [lines, onLinesLocked])
+ 
 
   return (
     <div className="relative">

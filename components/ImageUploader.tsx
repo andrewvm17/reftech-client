@@ -651,7 +651,7 @@ export function ImageUploader() {
         <Card className="border shadow-lg">
           <CardContent className="p-0">
             {/* Dropzone interface (no image) */}
-            {!image && !isLoading && !error && (
+            {!image && !isLoading && !Error && (
               <div
                 {...getRootProps()}
                 className={`relative aspect-video max-w-full flex flex-col items-center justify-center border-2
