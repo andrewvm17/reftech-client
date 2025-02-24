@@ -745,7 +745,7 @@ export function ImageUploader() {
             <StepCard
               icon={<Settings className="h-4 w-4" />}
               title="Manual VAR Mode"
-              className="bg-gray-200 border border-gray-300 text-gray-700 scale-95 transition-transform"
+             
               
             >
               <p className="text-sm text-muted-foreground mb-4">
@@ -772,9 +772,7 @@ export function ImageUploader() {
             <StepCard
               icon={<Sparkles className="h-4 w-4 animate-spin-slow text-yellow-400" />}
               title="Semi-Automated VAR"
-              className="relative p-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white
-                         rounded-md shadow-xl transition-transform
-                         hover:scale-105 hover:shadow-2xl animate-pulse"
+              
               isActive
             >
               <p className="text-sm font-semibold mb-2">

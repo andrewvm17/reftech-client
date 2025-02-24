@@ -6,13 +6,14 @@ import { CheckCircle } from "lucide-react" // NEW: import check icon
 interface StepCardProps {
   icon?: React.ReactNode
   title: string
-  isActive: boolean
-  children: React.ReactNode
+  isActive?: boolean
+  children?: React.ReactNode
   stepNumber?: number
   completed?: boolean
+  
 }
 
-export function StepCard({ icon, title, isActive, children, stepNumber, completed }: StepCardProps) {
+export function StepCard({ icon, title, isActive, children, stepNumber, completed, }: StepCardProps) {
   return (
     <Card className={cn("relative overflow-hidden", isActive && "border-primary")}>
       {isActive && (
