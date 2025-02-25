@@ -20,33 +20,33 @@ export const metadata = {
     description: "Analyze offside decisions like a professional VAR operator",
     url: "https://www.reftech.app",
     siteName: "reftech.app",
-    images: [
-      {
-        url: "/images/og-image.png", // Create this image (1200x630px recommended)
-        width: 1200,
-        height: 630,
-        alt: "reftech.app offside analysis tool",
-      },
-    ],
+    //images: [
+      //{
+      //  url: "/images/og-image.png", // Create this image (1200x630px recommended)
+      //  width: 1200,
+      //  height: 630,
+      //  alt: "reftech.app offside analysis tool",
+      //},
+    //],
     locale: "en_US",
     type: "website",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "reftech.app | Football Offside Analysis Tool",
-    description: "Analyze offside decisions like a professional VAR operator",
-    images: ["/images/twitter-image.png"], // Create this image (1200x600px recommended)
-  },
+  //twitter: {
+  //  card: "summary_large_image",
+  //  title: "reftech.app | Football Offside Analysis Tool",
+  //  description: "Analyze offside decisions like a professional VAR operator",
+  //  images: ["/images/twitter-image.png"], // Create this image (1200x600px recommended)
+  //},
   icons: {
     icon: [
-      { url: "/favicon.ico" },
-      { url: "/icon.png", type: "image/png" },
+      { url: "../public/favico.ico" },
+      //{ url: "/icon.png", type: "image/png" },
     ],
-    apple: [
-      { url: "/apple-icon.png", type: "image/png" },
-    ],
+    //apple: [
+      //{ url: "/apple-icon.png", type: "image/png" },
+    //],
   },
-  manifest: "/site.webmanifest", // Create this file with your site info
+  //manifest: "/site.webmanifest", // Create this file with your site info
 }
 
 export default function RootLayout({
