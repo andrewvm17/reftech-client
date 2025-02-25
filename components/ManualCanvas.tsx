@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useRef, useState, useCallback } from "react"
+import { calculateRelativePosition, calculateAbsolutePosition } from "@/utils/canvas-utils"
 
 type Point = {
   x: number
@@ -27,12 +28,14 @@ export function ManualCanvas({
   onLinesLocked,
 }: ManualCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-
-  // Example: Keep an array of lines in local state
+  const imageRef = useRef<HTMLImageElement | null>(null)
+  const [canvasDimensions, setCanvasDimensions] = useState({ width: 0, height: 0 })
+  
+  // Store lines in normalized coordinates (0-1) instead of absolute pixels
   const [lines, setLines] = useState<Line[]>([
-    // Two sample lines
-    { x1: 200, y1: 100, x2: 350, y2: 250, slope: null },
-    { x1: 250, y1: 200, x2: 400, y2: 350, slope: null },
+    // Two sample lines in normalized coordinates
+    { x1: 0.3, y1: 0.2, x2: 0.6, y2: 0.5, slope: null },
+    { x1: 0.4, y1: 0.4, x2: 0.7, y2: 0.7, slope: null },
   ])
 
   const [dragging, setDragging] = useState<{
@@ -40,44 +43,91 @@ export function ManualCanvas({
     endpoint: "start" | "end"
   } | null>(null)
 
-  // Re-draw canvas whenever image or lines change
+  // Load the image and set canvas dimensions
+  useEffect(() => {
+    const img = new Image()
+    img.onload = () => {
+      imageRef.current = img
+      
+      const canvas = canvasRef.current
+      if (canvas) {
+        // Set canvas dimensions based on the container size
+        const container = canvas.parentElement
+        if (container) {
+          const containerWidth = container.clientWidth
+          const containerHeight = container.clientHeight || (containerWidth * (img.height / img.width))
+          
+          // Set the canvas dimensions to match the container
+          canvas.width = containerWidth
+          canvas.height = containerHeight
+          
+          setCanvasDimensions({
+            width: containerWidth,
+            height: containerHeight
+          })
+          
+          // Redraw after setting dimensions
+          draw()
+        }
+      }
+    }
+    img.src = imageDataUrl
+  }, [imageDataUrl])
+
+  // Re-draw canvas whenever lines or lock state changes
   useEffect(() => {
     draw()
-  }, [imageDataUrl, lines, isLocked])
+  }, [lines, isLocked, canvasDimensions])
 
-  const draw = () => {
+  const draw = useCallback(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas || !imageRef.current) return
+    
     const ctx = canvas.getContext("2d")
     if (!ctx) return
 
-    const img = new Image()
-    img.onload = () => {
-      // REMOVE or comment out these two lines that force the canvas
-      // to the image's exact dimensions:
-      // canvas.width = img.width
-      // canvas.height = img.height
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    
+    // Draw the image to fill the canvas
+    ctx.drawImage(imageRef.current, 0, 0, canvas.width, canvas.height)
 
-      // Instead, draw the image so it fills our already "w-full h-full" canvas:
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-
-      // Draw lines
-      lines.forEach((line) => {
-        if (!isLocked) {
-          // normal green lines
-          drawLine(ctx, line, "green", 2)
-          drawHandle(ctx, line.x1, line.y1)
-          drawHandle(ctx, line.x2, line.y2)
-        } else {
-          // locked lines - thick, maybe dashed?
-          ctx.setLineDash([8, 5])
-          drawLine(ctx, line, "#00ff00", 5)
-          ctx.setLineDash([])
-        }
-      })
-    }
-    img.src = imageDataUrl
-  }
+    // Draw lines using the normalized coordinates converted to canvas pixels
+    lines.forEach((line) => {
+      // Convert normalized coordinates to canvas pixels
+      const startPoint = calculateAbsolutePosition(
+        { x: line.x1, y: line.y1 },
+        canvas.width,
+        canvas.height
+      )
+      
+      const endPoint = calculateAbsolutePosition(
+        { x: line.x2, y: line.y2 },
+        canvas.width,
+        canvas.height
+      )
+      
+      if (!isLocked) {
+        // Draw normal green lines
+        drawLine(ctx, 
+          { x1: startPoint.x, y1: startPoint.y, x2: endPoint.x, y2: endPoint.y, slope: line.slope }, 
+          "green", 
+          2
+        )
+        drawHandle(ctx, startPoint.x, startPoint.y)
+        drawHandle(ctx, endPoint.x, endPoint.y)
+      } else {
+        // Draw locked lines - thick, dashed
+        ctx.setLineDash([8, 5])
+        drawLine(ctx, 
+          { x1: startPoint.x, y1: startPoint.y, x2: endPoint.x, y2: endPoint.y, slope: line.slope }, 
+          "#00ff00", 
+          5
+        )
+        ctx.setLineDash([])
+      }
+    })
+  }, [lines, isLocked, canvasDimensions])
 
   const drawLine = (
     ctx: CanvasRenderingContext2D,
@@ -108,17 +158,24 @@ export function ManualCanvas({
     if (!canvas) return
 
     const rect = canvas.getBoundingClientRect()
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width)
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height)
+    const mouseX = e.clientX - rect.left
+    const mouseY = e.clientY - rect.top
+    
+    // Convert to normalized coordinates (0-1)
+    const normalizedPosition = calculateRelativePosition(
+      { x: mouseX, y: mouseY },
+      canvas.width,
+      canvas.height
+    )
 
-    // check if user clicked near an endpoint
-    const radius = 15
+    // Check if user clicked near an endpoint
+    const radius = 15 / Math.max(canvas.width, canvas.height) // Normalize the radius too
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]
-      if (distance(x, y, line.x1, line.y1) < radius) {
+      if (distance(normalizedPosition.x, normalizedPosition.y, line.x1, line.y1) < radius) {
         setDragging({ lineIndex: i, endpoint: "start" })
         return
-      } else if (distance(x, y, line.x2, line.y2) < radius) {
+      } else if (distance(normalizedPosition.x, normalizedPosition.y, line.x2, line.y2) < radius) {
         setDragging({ lineIndex: i, endpoint: "end" })
         return
       }
@@ -131,18 +188,25 @@ export function ManualCanvas({
     if (!canvas) return
 
     const rect = canvas.getBoundingClientRect()
-    const x = (e.clientX - rect.left) * (canvas.width / rect.width)
-    const y = (e.clientY - rect.top) * (canvas.height / rect.height)
+    const mouseX = e.clientX - rect.left
+    const mouseY = e.clientY - rect.top
+    
+    // Convert to normalized coordinates (0-1)
+    const normalizedPosition = calculateRelativePosition(
+      { x: mouseX, y: mouseY },
+      canvas.width,
+      canvas.height
+    )
 
     setLines((prev) => {
       const newLines = [...prev]
       const line = { ...newLines[dragging.lineIndex] }
       if (dragging.endpoint === "start") {
-        line.x1 = x
-        line.y1 = y
+        line.x1 = normalizedPosition.x
+        line.y1 = normalizedPosition.y
       } else {
-        line.x2 = x
-        line.y2 = y
+        line.x2 = normalizedPosition.x
+        line.y2 = normalizedPosition.y
       }
       newLines[dragging.lineIndex] = line
       return newLines
@@ -157,13 +221,13 @@ export function ManualCanvas({
     return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
   }
 
-  // Example function to finalize or "lock" lines
+  // Function to finalize or "lock" lines
   const lockLines = useCallback(() => {
     if (onLinesLocked) onLinesLocked(lines)
   }, [lines, onLinesLocked])
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       <canvas
         ref={canvasRef}
         onMouseDown={handleMouseDown}
@@ -172,8 +236,6 @@ export function ManualCanvas({
         onMouseLeave={handleMouseUp}
         className="w-full h-full cursor-crosshair"
       />
-      {/* Example button that locks lines */}
-      {/* <Button onClick={lockLines}>Lock Lines</Button> */}
     </div>
   )
 } 

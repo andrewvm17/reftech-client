@@ -39,7 +39,7 @@ export const metadata = {
   //},
   icons: {
     icon: [
-      { url: "../public/favico.ico" },
+      { url: "/favicon.ico" },
       //{ url: "/icon.png", type: "image/png" },
     ],
     //apple: [
