@@ -84,6 +84,16 @@ export function ImageUploader() {
   // NEW: Add userDecision state
   const [userDecision, setUserDecision] = useState<"offside" | "onside" | null>(null)
 
+  // First, let's add a new state for line thickness
+  const [lineThickness, setLineThickness] = useState(3) // Default thickness of 3
+
+  // Add state variables to store image dimensions
+  const [imageWidth, setImageWidth] = useState<number>(0)
+  const [imageHeight, setImageHeight] = useState<number>(0)
+
+  // Add a state to track the display scale factor
+  const [displayScaleFactor, setDisplayScaleFactor] = useState(1)
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       const file = acceptedFiles[0]
@@ -92,8 +102,17 @@ export function ImageUploader() {
       const reader = new FileReader()
       reader.onload = (e) => {
         if (e.target?.result) {
-          setImage(e.target.result as string)
+          const dataUrl = e.target.result as string
+          setImage(dataUrl)
           setError(null)
+          
+          // Get image dimensions when it loads
+          const img = new Image()
+          img.onload = () => {
+            setImageWidth(img.width)
+            setImageHeight(img.height)
+          }
+          img.src = dataUrl
         }
       }
       reader.readAsDataURL(file)
@@ -277,17 +296,20 @@ export function ImageUploader() {
   const drawLineWithEndpoints = (
     ctx: CanvasRenderingContext2D,
     line: Line,
-    color: string
+    color: string,
+    scaleFactor: number
   ) => {
     const { x1, y1, x2, y2 } = line
+    
     ctx.beginPath()
     ctx.strokeStyle = color
-    ctx.lineWidth = 3
+    ctx.lineWidth = lineThickness * scaleFactor
     ctx.moveTo(x1, y1)
     ctx.lineTo(x2, y2)
     ctx.stroke()
 
-    const endpointRadius = 6
+    // Scale endpoint radius based on image size
+    const endpointRadius = lineThickness * 2 * scaleFactor
     ctx.fillStyle = color
 
     ctx.beginPath()
@@ -299,7 +321,12 @@ export function ImageUploader() {
     ctx.fill()
   }
 
-  const drawExtendedLine = (ctx: CanvasRenderingContext2D, line: Line, color: string) => {
+  const drawExtendedLine = (
+    ctx: CanvasRenderingContext2D,
+    line: Line,
+    color: string,
+    scaleFactor: number
+  ) => {
     const { x1, y1, x2, y2 } = line
     const angle = Math.atan2(y2 - y1, x2 - x1)
     const canvas = ctx.canvas
@@ -315,7 +342,7 @@ export function ImageUploader() {
       y2 + Math.sin(angle) * lineLength
     )
     ctx.strokeStyle = color
-    ctx.lineWidth = 3
+    ctx.lineWidth = lineThickness * scaleFactor
     ctx.stroke()
   }
 
@@ -327,33 +354,51 @@ export function ImageUploader() {
 
     const img = new Image()
     img.onload = () => {
+      // Store the image dimensions when loaded
+      setImageWidth(img.width)
+      setImageHeight(img.height)
+      
       canvas.width = img.width
       canvas.height = img.height
       ctx.drawImage(img, 0, 0)
 
+      // Calculate the display scale factor
+      // This compares the canvas's actual size to its displayed size
+      const containerRect = canvas.getBoundingClientRect()
+      const displayWidth = containerRect.width
+      const displayHeight = containerRect.height
+      
+      // How much the image is being scaled to fit in the container
+      const scaleX = canvas.width / displayWidth
+      const scaleY = canvas.height / displayHeight
+      const scaleFactor = Math.max(scaleX, scaleY)
+      
+      // Store this for use in drawing functions
+      setDisplayScaleFactor(scaleFactor)
+
       // Draw manual lines in step 1
       if (selectedMode === "manual" && currentStep === 1) {
         manualLines.forEach(line => {
-          drawLineWithEndpoints(ctx, line, "green")
+          drawLineWithEndpoints(ctx, line, "pink", scaleFactor)
         })
       }
 
       // Draw the offside line in step 2 (if it exists)
       if (selectedMode === "manual" && currentStep === 2 && offsideLine) {
-        drawExtendedLine(ctx, offsideLine, "blue")
+        drawExtendedLine(ctx, offsideLine, "blue", scaleFactor)
       }
 
       if (selectedMode === "manual") {
         // During step 2, draw the line from vanishing point to canvas center
         if (currentStep === 2 && offsideLine) {
-          drawExtendedLine(ctx, offsideLine, "blue")
+          drawExtendedLine(ctx, offsideLine, "blue", scaleFactor)
         }
       } else {
         if ((currentStep === 1 || currentStep >= 3) && offsideLine) {
-          drawExtendedLine(ctx, offsideLine, "blue")
+          drawExtendedLine(ctx, offsideLine, "blue", scaleFactor)
         }
         if ((currentStep === 2 || currentStep >= 3) && redLine) {
-          drawExtendedLine(ctx, redLine, "red")
+          drawExtendedLine(ctx, redLine, "red", scaleFactor)
         }
       }
 
@@ -388,7 +433,7 @@ export function ImageUploader() {
       }
     }
     img.src = image
-  }, [image, offsideLine, redLine, currentStep, selectedMode, manualLines, directionOfPlay])
+  }, [image, offsideLine, redLine, currentStep, selectedMode, manualLines, directionOfPlay, lineThickness])
 
   useEffect(() => {
     if (image && canvasRef.current) {
@@ -419,6 +464,13 @@ export function ImageUploader() {
       if (interval) clearInterval(interval)
     }
   }, [isLoading])
+
+  // Add useEffect to redraw canvas when lineThickness changes
+  useEffect(() => {
+    if (image && canvasRef.current) {
+      drawImageAndLines()
+    }
+  }, [lineThickness]) // Add lineThickness to the dependency array
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (selectedMode === "semi-automated" && currentStep >= 3) {
@@ -620,31 +672,63 @@ export function ImageUploader() {
               <Button variant="outline" onClick={handleReset}>
                 Reset
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                disabled={!(selectedMode === "manual" && currentStep === 1)}
-                onClick={() => {
-                  const newLine: Line = {
-                    x1: 120,
-                    y1: 120,
-                    x2: 320,
-                    y2: 135,
-                    slope: 0,
-                  }
-                  setManualLines((prev) => [...prev, newLine])
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-              <Button
-                // Use a unique class to highlight final decision
-                className={isFinalDecisionStep ? "bg-red-600 hover:bg-red-700 text-white" : ""}
-                onClick={handleNextStep}
-                disabled={selectedMode === "semi-automated" && currentStep === 4}
-              >
-                {getButtonText(currentStep)}
-              </Button>
+              {selectedMode === "manual" && currentStep === 1 && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={!(selectedMode === "manual" && currentStep === 1)}
+                    onClick={() => {
+                      const canvas = canvasRef.current
+                      if (canvas) {
+                        // Create a new line with relative positioning
+                        const canvasWidth = canvas.width
+                        const canvasHeight = canvas.height
+                        
+                        const newLine: Line = {
+                          x1: canvasWidth * 0.3,
+                          y1: canvasHeight * 0.6,
+                          x2: canvasWidth * 0.7,
+                          y2: canvasHeight * 0.6,
+                          slope: 0,
+                        }
+                        setManualLines((prev) => [...prev, newLine])
+                      } else {
+                        // Fallback
+                        const newLine: Line = {
+                          x1: 120,
+                          y1: 120,
+                          x2: 320,
+                          y2: 135,
+                          slope: 0,
+                        }
+                        setManualLines((prev) => [...prev, newLine])
+                      }
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  
+                  {/* Add the thickness slider */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Line:</span>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      value={lineThickness}
+                      onChange={(e) => setLineThickness(parseInt(e.target.value))}
+                      className="w-24"
+                    />
+                    <span className="text-xs">{lineThickness}px</span>
+                  </div>
+                </>
+              )}
+              {currentStep > 0 && (
+                <Button onClick={handleNextStep} disabled={isLoading}>
+                  {getButtonText(currentStep)}
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -755,13 +839,34 @@ export function ImageUploader() {
                 variant="default"
                 onClick={() => {
                   setSelectedMode("manual")
-                  setManualLines([{
-                    x1: 100,
-                    y1: 100,
-                    x2: 300,
-                    y2: 115,
-                    slope: 0
-                  }])
+                  
+                  // Get canvas dimensions to create proportional lines
+                  const canvas = canvasRef.current
+                  if (canvas) {
+                    // Use relative positions (percentages) instead of fixed pixel values
+                    // This ensures consistent positioning regardless of image dimensions
+                    const canvasWidth = canvas.width
+                    const canvasHeight = canvas.height
+                    
+                    // Create line at 25% to 75% horizontally, and 40% vertically
+                    setManualLines([{
+                      x1: canvasWidth * 0.25,
+                      y1: canvasHeight * 0.4,
+                      x2: canvasWidth * 0.75,
+                      y2: canvasHeight * 0.4,
+                      slope: 0
+                    }])
+                  } else {
+                    // Fallback if canvas isn't available yet
+                    setManualLines([{
+                      x1: 100,
+                      y1: 100,
+                      x2: 300,
+                      y2: 115,
+                      slope: 0
+                    }])
+                  }
+                  
                   setCurrentStep(0)
                   handleNextStep()
                 }}
