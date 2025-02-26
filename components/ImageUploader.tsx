@@ -205,7 +205,7 @@ export function ImageUploader() {
       setIsLoading(true)
       try {
         const response = await axios.post<VanishingPointResponse>(
-          "https://reftech-manual-api.onrender.com/vanishing-point",
+          "https://reftech-manual-api.onrender.com/manual-vanishing-point",
           manualLines.map(line => ({
             ...line,
             slope: (line.y2 - line.y1) / (line.x2 - line.x1)  // Calculate slope for each line
