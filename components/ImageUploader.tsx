@@ -55,6 +55,55 @@ const fadeVariants = {
   exit: { opacity: 0, y: -10, transition: { duration: 0.8 } },
 }
 
+// Helper function to find intersection of a line from (x1, y1) to (x2, y2)
+// with the boundaries of the canvas (width, height).
+function getBoundaryIntersection(
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  width: number,
+  height: number
+): { x: number; y: number } {
+  // Parametric line: X(t)=x1 + t(dx), Y(t)=y1 + t(dy)
+  // We solve for the smallest t in [0,∞) where X(t) or Y(t) hits an edge.
+  const dx = x2 - x1
+  const dy = y2 - y1
+
+  // If the line is completely vertical/horizontal, handle it carefully
+  // but you can still unify logic in the param approach below.
+
+  let tValues: number[] = []
+
+  // Left edge (x = 0)
+  if (dx < 0) {
+    const t = (0 - x1) / dx
+    if (t >= 0) tValues.push(t)
+  }
+  // Right edge (x = width)
+  if (dx > 0) {
+    const t = (width - x1) / dx
+    if (t >= 0) tValues.push(t)
+  }
+  // Top edge (y = 0)
+  if (dy < 0) {
+    const t = (0 - y1) / dy
+    if (t >= 0) tValues.push(t)
+  }
+  // Bottom edge (y = height)
+  if (dy > 0) {
+    const t = (height - y1) / dy
+    if (t >= 0) tValues.push(t)
+  }
+
+  // Pick the smallest valid t
+  const tMin = Math.min(...tValues)
+  return {
+    x: x1 + tMin * dx,
+    y: y1 + tMin * dy,
+  }
+}
+
 export function ImageUploader() {
   const [image, setImage] = useState<string | null>(null)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -409,21 +458,40 @@ export function ImageUploader() {
         ctx.beginPath()
 
         // We'll build a polygon that covers either the left or right side of the line.
-        const offset = 5000 // Large offset to cover full canvas
+        const diagonal = Math.hypot(canvas.width, canvas.height)
+        const offset = diagonal * 2
+        // const offset = 5000 // Large offset to cover full canvas
         const dx = offsideLine.x2 - offsideLine.x1
         const dy = offsideLine.y2 - offsideLine.y1
-
+        console.log('cv height:', canvas.height)
+        console.log('cv width:', canvas.width)
+        console.log('offside line x1:', offsideLine.x1)
+        console.log('offside line y1:', offsideLine.y1)
+        console.log('offside line x2:', offsideLine.x2)
+        console.log('offside line y2:', offsideLine.y2)
+        console.log('vanishing point:', vanishingPoint)
+        console.log('slope:', dy / dx)
+        const temp = offsideLine.y2 - offsideLine.y1
+        const temp2 = temp / (dy / dx)
+        const stoppingPoint = offsideLine.x1 + temp2
+        console.log('stopping point:', stoppingPoint)
         // Move along the offsideLine first
         ctx.moveTo(offsideLine.x1, offsideLine.y1)
         ctx.lineTo(offsideLine.x2, offsideLine.y2)
 
         // If the user selected left or right, flip which side gets covered
         if (directionOfPlay === "left") {
-          ctx.lineTo(offsideLine.x2 - dy * offset, offsideLine.y2 + dx * offset)
-          ctx.lineTo(offsideLine.x1 - dy * offset, offsideLine.y1 + dx * offset)
+          if (offsideLine.x2 == canvas.width || offsideLine.x2 > canvas.width) {
+            ctx.lineTo(canvas.width, canvas.height)
+          }
+          ctx.lineTo(0, canvas.height)
+          ctx.lineTo(0, offsideLine.y1)
+          ctx.lineTo(offsideLine.x1, offsideLine.y1)
+
         } else if (directionOfPlay === "right") {
-          ctx.lineTo(offsideLine.x2 + dy * offset, offsideLine.y2 - dx * offset)
-          ctx.lineTo(offsideLine.x1 + dy * offset, offsideLine.y1 - dx * offset)
+          ctx.lineTo(canvas.width, canvas.height)
+          ctx.lineTo(canvas.width, offsideLine.y1)
+          ctx.lineTo(offsideLine.x1, offsideLine.y1)
         }
 
         ctx.closePath()
@@ -434,7 +502,7 @@ export function ImageUploader() {
     }
     img.src = image
   }, [image, offsideLine, redLine, currentStep, selectedMode, manualLines, directionOfPlay, lineThickness])
-
+  
   useEffect(() => {
     if (image && canvasRef.current) {
       drawImageAndLines()
@@ -575,17 +643,33 @@ export function ImageUploader() {
     if (!vanishingPoint || !offsideLine) return
     const canvas = canvasRef.current
     if (!canvas) return
+
     const dx = mouseX - vanishingPoint.x
     const dy = mouseY - vanishingPoint.y
     const angle = Math.atan2(dy, dx)
-    const lineLength = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height)
+    // We still create a "long" line to ensure it always reaches an edge
+    const bigExtension = Math.sqrt(canvas.width * canvas.width + canvas.height * canvas.height)
+
+    // Temporarily extend the line in that direction
+    const extendedX = vanishingPoint.x + Math.cos(angle) * bigExtension
+    const extendedY = vanishingPoint.y + Math.sin(angle) * bigExtension
+
+    // NEW: clamp the extended line to the exact canvas boundary
+    const { x: boundaryX, y: boundaryY } = getBoundaryIntersection(
+      vanishingPoint.x,
+      vanishingPoint.y,
+      extendedX,
+      extendedY,
+      canvas.width,
+      canvas.height
+    )
 
     setOffsideLine(prev => {
       if (!prev) return null
       return {
         ...prev,
-        x2: vanishingPoint.x + Math.cos(angle) * lineLength,
-        y2: vanishingPoint.y + Math.sin(angle) * lineLength,
+        x2: boundaryX,
+        y2: boundaryY,
         slope: Math.tan(angle),
       }
     })
