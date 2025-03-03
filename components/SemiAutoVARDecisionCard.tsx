@@ -49,7 +49,7 @@ export function SemiAutoVARDecisionCard({ decision }: VARDecisionProps) {
               height={48}
             />
             <span className="font-orbitron text-xl font-bold tracking-normal">
-              ref-tech.app
+              reftech.app
             </span>
           </div>
         </CardContent>

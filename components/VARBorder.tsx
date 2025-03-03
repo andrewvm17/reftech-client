@@ -59,6 +59,8 @@ export default function VARBorder() {
             stroke-dashoffset: 0;
           }
         }
+
+        
       `}</style>
     </div>
   )

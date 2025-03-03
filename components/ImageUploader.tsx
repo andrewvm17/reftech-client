@@ -189,11 +189,11 @@ export function ImageUploader() {
     }, ANIMATION_DURATION_MS)
 
     const formData = new FormData()
-    formData.append("image", uploadedFile)
+    formData.append("image_file", uploadedFile)
 
     try {
       const response = await axios.post<APIResponse>(
-        "https://thevarhub-api.onrender.com/get-vanishingpoint",
+        "https://reftech-manual-api.onrender.com/semi-automated-vanishing-point",
         formData
       )
       if (response.data?.vanishing_point) {
@@ -847,15 +847,37 @@ export function ImageUploader() {
                     animate="animate"
                     exit="exit"
                     className={cn(
-                      "flex flex-col items-center text-white relative z-10", 
+                      "flex flex-col items-center text-white relative z-10 shimmer-text",
                       loadStep === 0 ? "font-bold font-mono text-3xl" : "font-bold text-xl italic"
                     )}
                   >
-                    
                     {loadStep > 0}
                     {loadMessages[loadStep]}
                   </motion.div>
                 </AnimatePresence>
+                <style jsx global>{`
+                  @keyframes shimmer {
+                    0% {
+                      background-position: -400px 0;
+                    }
+                    100% {
+                      background-position: 400px 0;
+                    }
+                  }
+
+                  .shimmer-text {
+                    background: linear-gradient(
+                      to right,
+                      #ffffff 4%,
+                      #bbbbbb 25%,
+                      #ffffff 36%
+                    );
+                    background-size: 800px 100%;
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    animation: shimmer 2s infinite linear;
+                  }
+                `}</style>
               </div>
             )}
 
