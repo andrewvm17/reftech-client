@@ -481,7 +481,7 @@ export function ImageUploader() {
 
         // If the user selected left or right, flip which side gets covered
         if (directionOfPlay === "left") {
-          if (offsideLine.x2 == canvas.width || offsideLine.x2 > canvas.width) {
+          if (offsideLine.x2 == canvas.width || offsideLine.x2 > canvas.width || (Math.abs(offsideLine.x2 - canvas.width) < 1)) {
             ctx.lineTo(canvas.width, canvas.height)
           }
           ctx.lineTo(0, canvas.height)
