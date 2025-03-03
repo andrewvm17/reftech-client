@@ -73,7 +73,7 @@ function getBoundaryIntersection(
   // If the line is completely vertical/horizontal, handle it carefully
   // but you can still unify logic in the param approach below.
 
-  let tValues: number[] = []
+  const tValues: number[] = []
 
   // Left edge (x = 0)
   if (dx < 0) {
