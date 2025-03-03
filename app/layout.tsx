@@ -4,6 +4,7 @@ import { Space_Grotesk } from "next/font/google"
 import { Toaster } from "@/components/ui/toaster"
 import type React from "react" // Import React
 import type { Metadata } from "next"
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -101,6 +102,7 @@ export default function RootLayout({
       <body className={`${inter.className} ${spaceGrotesk.className}`}>
         {children}
         <Toaster />
+        <Analytics />
       </body>
     </html>
   )
