@@ -189,7 +189,7 @@ export function ImageUploader() {
     }, ANIMATION_DURATION_MS)
 
     const formData = new FormData()
-    formData.append("image_file", uploadedFile)
+    formData.append("image", uploadedFile)
 
     try {
       const response = await axios.post<APIResponse>(
