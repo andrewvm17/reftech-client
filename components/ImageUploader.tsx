@@ -193,7 +193,7 @@ export function ImageUploader() {
 
     try {
       const response = await axios.post<APIResponse>(
-        "https://reftech-manual-api.onrender.com/semi-automated-vanishing-point",
+        "https://thevarhub-api.onrender.com/get-vanishingpoint",
         formData
       )
       if (response.data?.vanishing_point) {
