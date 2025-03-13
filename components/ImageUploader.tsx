@@ -743,7 +743,7 @@ export function ImageUploader() {
     })
   }
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (e: { clientX: number; clientY: number; [key: string]: any }) => {
     setIsDragging(false)
     setDraggedEndpoint(null)
   }
