@@ -17,12 +17,17 @@ export function SemiAutoVARDecisionCard({ decision }: VARDecisionProps) {
 
   return (
     <motion.div
-      className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none px-2"
+      className="absolute top-2 right-0 flex items-center justify-center z-50 pointer-events-none px-2"
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="relative w-full max-w-sm bg-white text-black pointer-events-auto border border-black rounded-lg shadow-md">
+      <Card
+        className={cn(
+          "relative w-full pointer-events-auto border border-black rounded-lg shadow-md bg-white text-black",
+          "scale-[0.3] sm:scale-100 origin-top-right max-w-sm"
+        )}
+      >
         <CardHeader className=" text-center">
           {/* Top Title */}
           <CardTitle className="font-orbitron text-3xl tracking-wide mb-4">

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { StepCard } from "./StepCard"
 import { ModeButton } from "./ModeButton"
-import { Play, AlertCircle, Upload, Plus, Settings, Sparkles, Mic2, ArrowLeft, ArrowRight } from "lucide-react"
+import { Play, AlertCircle, Upload, Plus, Settings, Sparkles, Mic2, ArrowLeft, ArrowRight, Download } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Progress } from "@/components/ui/progress"
 import { motion, AnimatePresence } from "framer-motion"
@@ -16,6 +16,11 @@ import { cn } from "@/lib/utils"
 import AnimatedLines from "@/components/AnimatedLines"
 import { SemiAutoVARDecisionCard } from "./SemiAutoVARDecisionCard"
 import VARBorder from "@/components/VARBorder"
+import { CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Hand, Check, Zap, Clock, Shield } from "lucide-react"
+import { MaterialStepper } from "./MaterialStepper"
+import html2canvas from "html2canvas"
 
 
 type Point = {
@@ -104,6 +109,16 @@ function getBoundaryIntersection(
   }
 }
 
+// 1) Add a small array of sample images near the top level of your component:
+const sampleImages = [
+  { src: "/images/offside1.jpg", alt: "Controversial Offside #1" },
+  { src: "/images/offside2.jpg", alt: "Controversial Offside #2" },
+  // Add more as desired...
+];
+
+// 2) Define a helper function that fetches a sample image and treats it as an uploaded File:
+
+
 export function ImageUploader() {
   const [image, setImage] = useState<string | null>(null)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -142,6 +157,44 @@ export function ImageUploader() {
 
   // Add a state to track the display scale factor
   const [displayScaleFactor, setDisplayScaleFactor] = useState(1)
+
+  async function handleSelectSampleImage(imageUrl: string) {
+    setError(null);
+    try {
+      // Fetch the image as a Blob from public/images
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+  
+      // Create a File from the Blob (so we can reuse the same upload logic)
+      const file = new File([blob], "sample_offside.jpg", { type: blob.type });
+  
+      // Convert our File into a DataURL and set as `image`
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          // This sets our ImageUploader to treat this sample just like a user-uploaded file
+          setImage(e.target.result as string);
+          setUploadedFile(file);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      setError("Failed to load sample image. Please try again.");
+    }
+  }
+  // If your StepCards treat currentStep=0 as "Upload Image", 1 as "Adjust Blue Line", etc.,
+  // then we can pass activeStep={currentStep} to match that zero-based approach.
+
+  // For your semi-automated steps, define them the same as your StepCard titles:
+  const semiAutoSteps = [
+    "Upload Image",
+    "Adjust Blue Line",
+    "Adjust Red Line",
+    "Direction of Play",
+    "Make The Call"
+  ];
+
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -206,10 +259,7 @@ export function ImageUploader() {
           y2: y,
           slope: 0,
         })
-        toast({
-          title: "Image Analyzed",
-          description: "Vanishing point detected. Adjust the blue line as needed.",
-        })
+        
       } else {
         throw new Error("Unexpected response format")
       }
@@ -308,9 +358,7 @@ export function ImageUploader() {
   }
 
   const getButtonText = (step: number) => {
-    if (selectedMode === "semi-automated" && step === 5) {
-      return "Final Decision"
-    }
+   
 
     switch (step) {
       case 1:
@@ -319,7 +367,8 @@ export function ImageUploader() {
         return "Next Step"
       case 3:
         return "Next Step"
-      
+      case 4:
+        return "Done"
       default:
         return "Next Step"
     }
@@ -447,7 +496,7 @@ export function ImageUploader() {
           drawExtendedLine(ctx, offsideLine, "blue", scaleFactor)
         }
         if ((currentStep === 2 || currentStep >= 3) && redLine) {
-          drawExtendedLine(ctx, redLine, "red", scaleFactor)
+          drawExtendedLine(ctx, redLine, "green", scaleFactor)
         }
       }
 
@@ -702,16 +751,11 @@ export function ImageUploader() {
   // NEW: Modify these direction handlers to jump straight to step 5
   const handleDirectionLeft = () => {
     setDirectionOfPlay("left")
-
-    console.log('currentStep', currentStep)
-    // Instead of currentStep + 1, jump directly to step 5
     //setCurrentStep(currentStep + 1)
   }
 
   const handleDirectionRight = () => {
     setDirectionOfPlay("right")
-    console.log('currentStep', currentStep)
-    // Instead of currentStep + 1, jump directly to step 5
     //setCurrentStep(currentStep + 1)
   }
 
@@ -745,9 +789,297 @@ export function ImageUploader() {
   const isFinalDecisionStep =
     selectedMode === "semi-automated" && currentStep === 5
 
+  function ModeSelectorCards() {
+    const [localMode, setLocalMode] = useState<"manual" | "semi-automated">("manual");
+
+    return (
+      <div className="w-full">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-1">
+          {/* Manual Mode Card */}
+          <Card
+            className={cn(
+              "relative border-2 transition-all duration-200",
+              localMode === "manual"
+                ? "border bg-primary/5"
+                : "border-border/40 bg-background/30 hover:border-border"
+            )}
+            
+          >
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-xl font-semibold text-white">
+                  <div className="flex items-center gap-2">
+                    <Hand className="h-5 w-5" />
+                    Manual VAR Mode
+                  </div>
+                </CardTitle>
+                <Badge
+                  variant="outline"
+                  className="bg-primary/10 text-primary border-primary/20"
+                >
+                  Free
+                </Badge>
+              </div>
+              <CardDescription className="text-muted-foreground">
+                Human-guided line drawing for maximum accuracy
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ul className="space-y-2">
+                {[
+                  "Draw offside lines manually",
+                  "Full control over placement",
+                  "Basic analysis tools",
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <span className="text-sm text-muted-foreground">
+                      {feature}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+            <CardFooter>
+              <Button
+                variant={localMode === "manual" ? "default" : "outline"}
+                className="w-full"
+                onClick={() => {
+                  setSelectedMode("manual")
+                  
+                  // Get canvas dimensions to create proportional lines
+                  const canvas = canvasRef.current
+                  if (canvas) {
+                    // Use relative positions (percentages) instead of fixed pixel values
+                    // This ensures consistent positioning regardless of image dimensions
+                    const canvasWidth = canvas.width
+                    const canvasHeight = canvas.height
+                    
+                    // Create line at 25% to 75% horizontally, and 40% vertically
+                    setManualLines([{
+                      x1: canvasWidth * 0.25,
+                      y1: canvasHeight * 0.4,
+                      x2: canvasWidth * 0.75,
+                      y2: canvasHeight * 0.4,
+                      slope: 0
+                    }])
+                  } else {
+                    // Fallback if canvas isn't available yet
+                    setManualLines([{
+                      x1: 100,
+                      y1: 100,
+                      x2: 300,
+                      y2: 115,
+                      slope: 0
+                    }])
+                  }
+                  
+                  setCurrentStep(0)
+                  handleNextStep()
+                }}
+              >
+                
+                Try For Free
+              </Button>
+            </CardFooter>
+            {localMode === "manual" && (
+              <div className="absolute -top-2 -right-2">
+                <div className="bg-primary text-primary-foreground text-xs rounded-full p-1">
+                  <Check className="h-4 w-4" />
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Semi-Automated (previously "premium") Mode Card */}
+          <Card
+            className={cn(
+              "relative border-2 transition-all duration-200 overflow-hidden",
+              
+               "border- bg-primary/10"
+            )}
+            
+          >
+            {/* Recommended Banner */}
+            <div className="absolute top-0 right-0 left-0 bg-gradient-to-r
+                          from-amber-500 to-amber-300 text-black
+                          text-xs font-medium py-1 px-4 text-center"
+            >
+              RECOMMENDED
+            </div>
+            <CardHeader className="pt-8">
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-xl font-semibold text-white">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-amber-300" />
+                    Semi-Automated VAR
+                  </div>
+                </CardTitle>
+                <Badge className="bg-amber-500/90 hover:bg-amber-500 text-black border-none">
+                  Premium
+                </Badge>
+              </div>
+              <CardDescription className="text-muted-foreground">
+                AI-assisted offside detection for precision results
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-gradient-to-r from-amber-500/10 to-amber-300/10
+                                   rounded-lg p-3 border border-amber-500/20"
+              >
+                <p className="text-sm font-medium text-white">
+                  Get premium, AI-assisted offside detection for just{" "}
+                  <span className="text-amber-300 font-bold">$2.99/month!</span>
+                </p>
+              </div>
+              <ul className="space-y-2">
+                {[
+                  {
+                    text: "AI-powered line drawing",
+                    icon: <Zap className="h-5 w-5 text-amber-300 shrink-0 mt-0.5" />,
+                  },
+                  {
+                    text: "Save up to 70% of your time",
+                    icon: <Clock className="h-5 w-5 text-amber-300 shrink-0 mt-0.5" />,
+                  },
+                  {
+                    text: "Advanced computer vision technology",
+                    icon: <Shield className="h-5 w-5 text-amber-300 shrink-0 mt-0.5" />,
+                  },
+                  {
+                    text: "All features from Manual mode",
+                    icon: <Check className="h-5 w-5 text-amber-300 shrink-0 mt-0.5" />,
+                  },
+                ].map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    {feature.icon}
+                    <span className="text-sm text-muted-foreground">
+                      {feature.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+            <CardFooter>
+              <Button
+                variant="default"
+                className={cn(
+                  "w-full",
+                  
+                    "bg-gradient-to-r from-amber-500 to-amber-300 text-black hover:text-black hover:from-amber-400 hover:to-amber-200"
+                )}
+                onClick={async () => {
+                  
+                  setSelectedMode("semi-automated");
+                  await handleStartSemiAutomated();
+                }}
+              >
+                Upgrade Now
+              </Button>
+            </CardFooter>
+            
+          </Card>
+        </div>
+        {/* Extra text for chosen mode */}
+        
+      </div>
+    );
+  }
+
+  function handleTouchStart(e: React.TouchEvent<HTMLCanvasElement>) {
+    e.preventDefault()
+
+    // You can re-use the same logic as handleMouseDown, but adapted for touches
+    // For example:
+    const touch = e.touches[0]
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((touch.clientX - rect.left) * e.currentTarget.width) / rect.width
+    const y = ((touch.clientY - rect.top) * e.currentTarget.height) / rect.height
+
+    // Replicate any mouse-down behavior here, such as setting isDragging = true 
+    // and detecting if you're near an endpoint:
+    setIsDragging(true)
+    // Optionally copy handleMouseDown logic:
+    handleMouseDown({
+      ...e,
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      currentTarget: e.currentTarget,
+      preventDefault: () => e.preventDefault()
+    } as unknown as React.MouseEvent<HTMLCanvasElement>)
+  }
+
+  function handleTouchMove(e: React.TouchEvent<HTMLCanvasElement>) {
+    e.preventDefault()
+
+    // Similarly to handleTouchStart, replicate handleMouseMove logic
+    const touch = e.touches[0]
+    // Optionally copy handleMouseMove logic:
+    handleMouseMove({
+      ...e,
+      clientX: touch.clientX,
+      clientY: touch.clientY,
+      currentTarget: e.currentTarget,
+      preventDefault: () => e.preventDefault()
+    } as unknown as React.MouseEvent<HTMLCanvasElement>)
+  }
+
+  function handleTouchEnd(e: React.TouchEvent<HTMLCanvasElement>) {
+    e.preventDefault()
+    
+    // Replicate handleMouseUp logic:
+    handleMouseUp({
+      ...e,
+      clientX: 0,
+      clientY: 0,
+      currentTarget: e.currentTarget,
+      preventDefault: () => e.preventDefault()
+    } as unknown as React.MouseEvent<HTMLCanvasElement>)
+  }
+  
+
+  // New function to handle screenshot & download/share
+  async function handleDownloadScreenshot() {
+    if (!containerRef.current) return
+    try {
+      const canvas = await html2canvas(containerRef.current, {
+        useCORS: true,    // if images are on different domains, ensure CORS is set
+        scale: 1,         // you can increase this for higher-res
+      })
+      const dataUrl = canvas.toDataURL("image/png")
+
+      // Convert dataUrl to a Blob
+      const response = await fetch(dataUrl)
+      const blob = await response.blob()
+
+      // Create a File from the Blob (for Web Share API)
+      const file = new File([blob], "offsides.png", { type: "image/png" })
+
+      // Check if Web Share API is supported AND we can share the File
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "Offside Snapshot",
+          text: "Check out my offside analysis!",
+          files: [file],
+        })
+        // If the user chooses "Save Image," it should go to their Photos on iOS/Android.
+      } else {
+        // Fallback: typical "download" approach for desktop or unsupported devices
+        const link = document.createElement("a")
+        link.href = dataUrl
+        link.download = "offsides.png"
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+      }
+    } catch (error) {
+      console.error("Screenshot failed", error)
+    }
+  }
+
   return (
-    <div className="flex min-h-screen pt-16">
-      <main className="flex-1 p-6 space-y-4">
+    <div className="flex flex-col md:flex-row pt-16" ref={containerRef}>
+      <main className="flex-1 pt-3 space-y-4">
         
         <div className="flex items-center justify-between">
           <ModeButton {...getCurrentMode(currentStep)} showPulsingCircle />
@@ -809,7 +1141,7 @@ export function ImageUploader() {
                 </>
               )}
               {currentStep > 0 && (
-                <Button onClick={handleNextStep} disabled={isLoading}>
+                <Button onClick={handleNextStep} disabled={isLoading || currentStep === 4}>
                   {getButtonText(currentStep)}
                 </Button>
               )}
@@ -821,18 +1153,85 @@ export function ImageUploader() {
           <CardContent className="p-0">
             {/* Dropzone interface (no image) */}
             {!image && !isLoading && !error && (
-              <div
-                {...getRootProps()}
-                className={`relative aspect-video max-w-full flex flex-col items-center justify-center border-2
-                  border-dashed rounded-xl transition-colors cursor-pointer ${
+              <>
+                <div
+                  {...getRootProps()}
+                  className={cn(
+                    "relative aspect-video max-w-full flex flex-col items-center justify-center",
+                    "border-2 border-dashed rounded-xl transition-colors cursor-pointer",
                     isDragActive ? "border-primary bg-primary/10" : "border-muted-foreground"
-                  }`}
-              >
-                <input {...getInputProps()} className="hidden" />
-                <Upload className="w-12 h-12 text-muted-foreground mb-4" />
-                <p className="text-lg font-semibold mb-2">Drag & drop here, or click to select</p>
-                <p className="text-sm text-muted-foreground">JPG, PNG, GIF (max 10MB)</p>
-              </div>
+                  )}
+                >
+                  <input {...getInputProps()} className="hidden" />
+                  <Upload className="w-12 h-12 text-muted-foreground mb-4" />
+                  <p className="text-lg font-semibold mb-2">Drag & drop here, or click to select</p>
+                  <p className="text-sm text-muted-foreground">JPG, PNG, GIF (max 10MB)</p>
+
+                  {/* "Try a Sample" goes right below the drag-and-drop text */}
+                  <div className="mt-6">
+                    <h3 className="text-sm font-semibold mb-2 text-center">
+                      Or... try one of these historical examples:
+                    </h3>
+
+                    {/* Arrange samples horizontally */}
+                    <div className="flex gap-5 justify-center items-start">
+                      {/* Sample 1: Hand of God (example) */}
+                      <div className="flex flex-col items-center">
+                        <span className="italic text-blue-500 mb-2">Tevez 2010</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();      // Prevents click bubbling
+                            handleSelectSampleImage("/images/tevezoffside.png");
+                          }}
+                          className="border rounded overflow-hidden hover:opacity-80 transition"
+                        >
+                          <img
+                            src="/images/tevezoffside.png"
+                            alt="Controversial Hand of God goal"
+                            className="w-96 h-50 object-cover"
+                          />
+                        </button>
+                      </div>
+
+                      {/* Sample 2: CR7 Offside */}
+                      <div className="flex flex-col items-center">
+                        <span className="italic text-green-500 mb-2">CR7 100th UCL Goal</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectSampleImage("/images/cr7_offside_sample.png");
+                          }}
+                          className="border rounded overflow-hidden hover:opacity-80 transition"
+                        >
+                          <img
+                            src="/images/cr7_offside_sample.png"
+                            alt="Tevez offside controversy"
+                            className="w-96 h-50 object-cover"
+                          />
+                        </button>
+                      </div>
+
+                      {/* Sample 3: Check Complete (Luis Diaz) */}
+                      <div className="flex flex-col items-center">
+                        <span className="italic text-red-500 mb-2">"Check Complete"</span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSelectSampleImage("/images/offside.png");
+                          }}
+                          className="border rounded overflow-hidden hover:opacity-80 transition"
+                        >
+                          <img
+                            src="/images/offside.png"
+                            alt="Luis Diaz offside controversy"
+                            className="w-96 h-50 object-cover"
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
 
             {/* Loading Overlay */}
@@ -894,24 +1293,60 @@ export function ImageUploader() {
 
             {/* Gradient border only if an image is present */}
             {image && !isLoading && !error && (
-              <div className="relative p-[3px] overflow-hidden rounded-xl aspect-video max-w-full">
-                <div className="pointer-events-none absolute inset-0 
-                                rounded-xl bg-gradient-to-r 
-                                from-blue-500 via-purple-500 to-teal-500 
-                                animate-gradient-bg" 
+              <div
+                className="
+                  relative
+                  md:p-[3px]
+                  p-0
+                  overflow-hidden
+                  rounded-xl
+                  max-w-full
+                "
+              >
+                {/* Gradient overlay (hidden on mobile) */}
+                <div
+                  className="
+                    pointer-events-none
+                    absolute
+                    inset-0
+                    rounded-xl
+                    bg-gradient-to-r
+                    from-blue-500
+                    via-purple-500
+                    to-teal-500
+                    animate-gradient-bg
+                    hidden
+                    md:block
+                  "
                 />
                 <div className="relative z-10 bg-background rounded-xl w-full h-full">
                   <canvas
                     ref={canvasRef}
                     className="w-full h-full cursor-pointer rounded-xl"
+                    style={{ touchAction: "none" }}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
                     onMouseUp={handleMouseUp}
                     onMouseLeave={handleMouseUp}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
                   />
 
                   {selectedMode === "semi-automated" && currentStep === 4 && userDecision && (
-                    <SemiAutoVARDecisionCard decision={userDecision} />
+                    <>
+                      <SemiAutoVARDecisionCard decision={userDecision} />
+                      <div className="absolute bottom-4 right-4">
+                        <Button
+                          variant="outline"
+                          className="font-orbitron flex items-center gap-2"
+                          onClick={handleDownloadScreenshot}
+                        >
+                          <Download className="h-4 w-4" />
+                          Download
+                        </Button>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
@@ -919,9 +1354,36 @@ export function ImageUploader() {
           </CardContent>
         </Card>
 
-      
+        {/* Render the MaterialStepper whenever in semi-auto mode */}
+        {selectedMode === "semi-automated" && currentStep >= 0 && (
+          <MaterialStepper
+            steps={semiAutoSteps}
+            activeStep={currentStep} 
+          />
+        )}
+
       </main>
-      <aside className="w-80 p-6 bg-background/50 backdrop-blur-sm border-l border-border/50 space-y-6">
+      <aside 
+        className="
+          flex 
+          flex-col 
+          w-full 
+          p-2 
+          bg-background/50 
+          backdrop-blur-sm 
+          border-l 
+          border-border/50 
+          gap-2 
+          overflow-x-auto 
+          items-center
+          text-center
+          md:items-start 
+          md:text-left
+          md:w-80
+          md:p-6
+          md:gap-6
+        "
+      >
         {!image && (
           <StepCard stepNumber={1} title="Upload Image" isActive={!image}>
             <p className="text-sm text-muted-foreground mb-4">
@@ -932,78 +1394,8 @@ export function ImageUploader() {
 
         {image && !selectedMode && (
           <>
-            <StepCard
-              icon={<Settings className="h-4 w-4" />}
-              title="Manual VAR Mode"
-             
-              
-            >
-              <p className="text-sm text-muted-foreground mb-4">
-                Human-guided line drawing for maximum accuracy. 
-              </p>
-              <Button
-                variant="default"
-                onClick={() => {
-                  setSelectedMode("manual")
-                  
-                  // Get canvas dimensions to create proportional lines
-                  const canvas = canvasRef.current
-                  if (canvas) {
-                    // Use relative positions (percentages) instead of fixed pixel values
-                    // This ensures consistent positioning regardless of image dimensions
-                    const canvasWidth = canvas.width
-                    const canvasHeight = canvas.height
-                    
-                    // Create line at 25% to 75% horizontally, and 40% vertically
-                    setManualLines([{
-                      x1: canvasWidth * 0.25,
-                      y1: canvasHeight * 0.4,
-                      x2: canvasWidth * 0.75,
-                      y2: canvasHeight * 0.4,
-                      slope: 0
-                    }])
-                  } else {
-                    // Fallback if canvas isn't available yet
-                    setManualLines([{
-                      x1: 100,
-                      y1: 100,
-                      x2: 300,
-                      y2: 115,
-                      slope: 0
-                    }])
-                  }
-                  
-                  setCurrentStep(0)
-                  handleNextStep()
-                }}
-              >
-                Try For Free
-              </Button>
-            </StepCard>
-            <StepCard
-              icon={<Sparkles className="h-4 w-4 animate-spin-slow text-yellow-400" />}
-              title="Semi-Automated VAR"
-              
-              isActive
-            >
-              <p className="text-sm font-semibold mb-2">
-                Get premium, AI-assisted offside detection for just <span className="text-yellow-200">$2.99/month</span>!
-              </p>
-              <p className="text-xs text-white/90 mb-4">
-                Our AI offside algorithm uses modern computer vision techniques to save you time and draw lines for you.
-              </p>
-              <Button
-                className="bg-black/70 hover:bg-black text-white px-6 py-3
-                           font-bold rounded-lg transform transition-transform
-                           hover:scale-105"
-                onClick={async () => {
-                  setSelectedMode("semi-automated")
-                  await handleStartSemiAutomated()
-                }}
-              >
-                Admin Test
-              </Button>
-            </StepCard>
+            {/* Render our brand-new ModeSelectorCards */}
+            <ModeSelectorCards />
           </>
         )}
 
@@ -1063,78 +1455,132 @@ export function ImageUploader() {
 
         {image && selectedMode === "semi-automated" && (
           <>
-            {/* Center the Directions heading */}
-            <h2 className="text-xl font-bold mb-4 text-center">Directions</h2>
-            <StepCard
-              stepNumber={1}
-              title="Upload Image"
-              isActive={!vanishingPoint}
-              completed={!!vanishingPoint}
-            >
-              <p className="text-sm text-muted-foreground mb-4">
-                Waiting for or analyzing image...
-              </p>
-            </StepCard>
-            <StepCard
-              stepNumber={2}
-              title="Adjust Blue Line"
-              isActive={currentStep === 1}
-              completed={currentStep > 1}
-            >
-              <p className="text-sm text-muted-foreground mb-4">
-                Mark the deepest defender with a blue line. Click & drag to reposition.
-              </p>
-            </StepCard>
-            <StepCard
-              stepNumber={3}
-              title="Adjust Red Line"
-              isActive={currentStep === 2}
-              completed={currentStep > 2}
-            >
-              <p className="text-sm text-muted-foreground mb-4">
-                Mark the attacker with a red line. Click & drag to reposition.
-              </p>
-            </StepCard>
-            <StepCard
-              stepNumber={4}
-              title="Choose Direction of Play"
-              isActive={currentStep === 3}
-              completed={currentStep > 3}
-            >
-              <p className="text-sm text-muted-foreground mb-4">
-                Select the direction the play is moving:
-              </p>
-              <div className="flex gap-4">
-                <Button variant="outline" onClick={handleDirectionLeft} disabled={currentStep !== 3}>
-                  <ArrowLeft className="mr-2" /> Left
-                </Button>
-                <Button variant="outline" onClick={handleDirectionRight} disabled={currentStep !== 3}>
-                  Right <ArrowRight className="ml-2" />
-                </Button>
+            {/* Center the Directions heading (visible only on desktop) */}
+            <h2 className="text-xl font-bold mb-4 text-center hidden md:block">Directions</h2>
+
+            {/* Wrap the StepCards in a `hidden md:block` so they are hidden on mobile */}
+            <div className="hidden md:block">
+              <StepCard
+                stepNumber={1}
+                title="Upload Image"
+                isActive={!vanishingPoint}
+                completed={!!vanishingPoint}
+              >
+                <p className="text-sm text-muted-foreground mb-4">
+                  Waiting for or analyzing image...
+                </p>
+              </StepCard>
+
+              <StepCard
+                stepNumber={2}
+                title="Adjust Blue Line"
+                isActive={currentStep === 1}
+                completed={currentStep > 1}
+              >
+                <p className="text-sm text-muted-foreground mb-4">
+                  Mark the deepest defender with a blue line. Click & drag to reposition.
+                </p>
+              </StepCard>
+
+              <StepCard
+                stepNumber={3}
+                title="Adjust Red Line"
+                isActive={currentStep === 2}
+                completed={currentStep > 2}
+              >
+                <p className="text-sm text-muted-foreground mb-4">
+                  Mark the attacker with a red line. Click & drag to reposition.
+                </p>
+              </StepCard>
+
+              <StepCard
+                stepNumber={4}
+                title="Choose Direction of Play"
+                isActive={currentStep === 3}
+                completed={currentStep > 3}
+              >
+                <p className="text-sm text-muted-foreground mb-4">
+                  Select the direction the play is moving:
+                </p>
+                <div className="flex gap-4">
+                  <Button variant="outline" onClick={handleDirectionLeft} disabled={currentStep !== 3}>
+                    <ArrowLeft className="mr-2" /> Left
+                  </Button>
+                  <Button variant="outline" onClick={handleDirectionRight} disabled={currentStep !== 3}>
+                    Right <ArrowRight className="ml-2" />
+                  </Button>
+                </div>
+              </StepCard>
+
+              <StepCard
+                stepNumber={5}
+                title="Make The Call"
+                isActive={currentStep === 4}
+              >
+                <div className="flex gap-4">
+                  <Button 
+                    className="bg-red-600 text-white hover:bg-red-700" 
+                    disabled={currentStep !== 4}
+                    onClick={() => setUserDecision("offside")}
+                  >
+                    OFFSIDE
+                  </Button>
+                  <Button 
+                    className="bg-green-600 text-white hover:bg-green-700"
+                    disabled={currentStep !== 4}
+                    onClick={() => setUserDecision("onside")}
+                  >
+                    ONSIDE
+                  </Button>
+                </div>
+              </StepCard>
+            </div> {/* end hidden md:block */}
+
+            {/* New block: show on mobile only. Big direction of play buttons when currentStep === 3 */}
+            {currentStep === 3 && (
+              <div className="block md:hidden mt-6 text-center">
+                <p className="text-lg font-semibold mb-4">Choose Direction of Play</p>
+                <div className="flex justify-center gap-4">
+                  <Button
+                    className="w-32 h-12 text-lg bg-accent text-accent-foreground hover:opacity-90"
+                    onClick={handleDirectionLeft}
+                    disabled={currentStep !== 3}
+                  >
+                    <ArrowLeft className="mr-2" /> Left
+                  </Button>
+                  <Button
+                    className="w-32 h-12 text-lg bg-accent text-accent-foreground hover:opacity-90"
+                    onClick={handleDirectionRight}
+                    disabled={currentStep !== 3}
+                  >
+                    Right <ArrowRight className="ml-2" />
+                  </Button>
+                </div>
               </div>
-            </StepCard>
-            <StepCard
-              stepNumber={5}
-              title="Make The Call"
-              isActive={currentStep === 4}
-            >
-              <div className="flex gap-4">
-                <Button 
-                  className="bg-red-600 text-white hover:bg-red-700" 
-                  disabled={currentStep !== 4}
-                  onClick={() => setUserDecision("offside")}
-                >
-                  OFFSIDE
-                </Button>
-                <Button 
-                  className="bg-green-600 text-white hover:bg-green-700"
-                  disabled={currentStep !== 4}
-                  onClick={() => setUserDecision("onside")}
-                >
-                  ONSIDE
-                </Button>
+            )}
+
+            {/* New block: show on mobile only. Big OFFSIDE/ONSIDE buttons when currentStep === 4 */}
+            {currentStep === 4 && (
+              <div className="block md:hidden mt-6 text-center">
+                <p className="text-lg font-semibold mb-4">Make The Call</p>
+                <div className="flex justify-center gap-4">
+                  <Button
+                    className="w-32 h-12 text-lg bg-red-600 text-white hover:bg-red-700"
+                    onClick={() => setUserDecision("offside")}
+                    disabled={currentStep !== 4}
+                  >
+                    OFFSIDE
+                  </Button>
+                  <Button
+                    className="w-32 h-12 text-lg bg-green-600 text-white hover:bg-green-700"
+                    onClick={() => setUserDecision("onside")}
+                    disabled={currentStep !== 4}
+                  >
+                    ONSIDE
+                  </Button>
+                </div>
               </div>
-            </StepCard>
+            )}
           </>
         )}
       </aside>

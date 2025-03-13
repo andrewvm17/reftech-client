@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowRight, Zap } from "lucide-react"
 import Link from "next/link"
+import { ImageProcessingVisualizer } from "@/components/ImageProcessingVisualizer"
 
 const users = [
   { name: "Alex", image: "/placeholder.svg?height=32&width=32" },
@@ -53,9 +54,9 @@ export function Hero() {
             <span className="text-sm text-muted-foreground">Created by a USSF certified referee</span>
           </div>
           <p className="text-[10px] text-muted-foreground leading-tight max-w-xs">
-            Disclaimer: ref-tech.app is an independent product and is not affiliated with,
+            Disclaimer: reftech.app is an independent product and is not affiliated with,
             endorsed, sponsored, or approved by the United States Soccer Federation (USSF).
-            All opinions and analyses are solely those of ref-tech.app and its creators.
+            All opinions and analyses are solely those of reftech.app and its creators.
           </p>
         </motion.div>
         <motion.div
@@ -65,13 +66,7 @@ export function Hero() {
           className="relative mx-auto w-full max-w-8xl shadow-2xl lg:ml-auto"
         >
           <div className="relative h-full w-full rounded-lg bg-background">
-            <img
-              alt="soccer offsides"
-              src="/images/marketing_static_demo.png"
-              className="h-full w-full object-contain"
-            />
-            <div className="absolute inset-0" />
-            
+            <ImageProcessingVisualizer />
           </div>
         </motion.div>
       </div>

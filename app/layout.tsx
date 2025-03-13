@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import type React from "react" // Import React
 import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/react"
+import { SiteFooter } from "@/components/SiteFooter"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   keywords: ["football", "soccer", "VAR", "offside", "offside tool", "analysis", "referee", "decision", "VAR analysis", "VAR tool", "VAR analysis tool", "VAR analysis tool for football", "VAR analysis tool for soccer", "VAR analysis tool for referees", "VAR analysis tool for coaches", "VAR analysis tool for fans", "premier league", "football analysis", "football tool", "football offside analysis", "football offside tool", "football offside analysis tool", "football offside tool", "football offside analysis tool", "football offside tool"],
   authors: [{ name: "reftech.app" }],
   openGraph: {
-    title: "reftech.app | Football Offside Analysis Tool",
+    title: "reftech | Football VAR Tool",
     description: "Analyze offside decisions like a professional VAR operator",
     url: "https://www.reftech.app",
     siteName: "reftech.app",
@@ -103,6 +104,7 @@ export default function RootLayout({
         {children}
         <Toaster />
         <Analytics />
+        <SiteFooter />
       </body>
     </html>
   )
